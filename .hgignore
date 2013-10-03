@@ -1,6 +1,6 @@
 # use glob syntax.
 syntax: glob
 
-#out.poly
-#out.pts
-#*.pyc
+out.poly
+out.pts
+*.pyc
