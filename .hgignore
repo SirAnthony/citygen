@@ -1,2 +1,6 @@
+# use glob syntax.
+syntax: glob
+
 out.poly
 out.pts
+*.pyc
