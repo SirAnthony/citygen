@@ -1,3 +1,3 @@
 
 
-MODULES_AVAILABLE = ['graph', 'shape']
+MODULES_AVAILABLE = ['graph', 'shape', 'regions']

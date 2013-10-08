@@ -33,11 +33,15 @@ class ModGraph(Module):
 
         print "Build graph..."
         self.buildGraph(points)
-        self.improveCorners()
 
         # Remove absent nodes
         self.sweepGraph()
 
+        self.assignCorners()
+        self.improveCorners()
+
+        # Do some manipulation
+        self.prepareGraph()
 
     def generateRandomPoints(self):
         points = []
@@ -179,6 +183,38 @@ class ModGraph(Module):
                 edge.d1 = centerLookup[dedge.p1.x][dedge.p1.y];
             edge.register()
 
+    def assignCorners(self):
+        proto = self.map
+        def is_closed(center):
+            edges = list(center.borders)
+            edge = edges.pop()
+            stack = [edge.v0, edge.v1]
+
+            def next_point(p0, e1):
+                if p0 == e1.v0:
+                    return e1.v1
+                if p0 == e1.v1:
+                    return e1.v0
+                return None
+
+            while len(edges):
+                count = len(edges)
+                last = stack[-1]
+                for edge in edges:
+                    point = next_point(last, edge)
+                    if point:
+                        edges.remove(edge)
+                        stack.append(point)
+                        break
+                if count == len(edges): # in loop
+                    return False
+            return len(stack) > 1 and stack[0] == stack[-1]
+
+        for center in proto.centers:
+            if not is_closed(center):
+                center.border = True
+                for q in center.corners:
+                    q.border = True
 
     def improveCorners(self):
         #std::map< int, s2f > newCorners;
@@ -207,13 +243,34 @@ class ModGraph(Module):
             if edge.v0 and edge.v1:
                 edge.midpoint = interpolate(edge.v0.point, edge.v1.point, 0.5)
 
+    def prepareGraph(self):
+        for c in self.map.centers:
+            if not c.neighbors: # Center - hikka, lol
+                continue
+            centers = float(len(c.neighbors))
+            proximity = 0.0
+            for n in c.neighbors:
+                proximity += float(c.point.distance(n.point))
+            c.proximity = proximity / centers
+
+        for c in self.map.corners:
+            touches = len(c.touches)
+            proximity = 0.0
+            for tch in c.touches:
+                proximity += float(tch.proximity)
+            c.proximity = proximity / touches
+
 
     def sweepGraph(self):
         targets = []
-        for c in self.map.centers:
-            targets.extend([c.neighbors, c.borders, c.corners])
+        proto = self.map
+        for c in list(proto.centers):
+            if c.neighbors and c.borders and c.corners:
+                targets.extend([c.neighbors, c.borders, c.corners])
+            else:
+                proto.centers.remove(c)
 
-        for q in self.map.corners:
+        for q in proto.corners:
             targets.extend([q.touches, q.protrudes, q.adjacent])
 
         for tgt in targets:
@@ -221,6 +278,7 @@ class ModGraph(Module):
                 tgt.remove(None)
             except:
                 pass
+
 
 
 def get_module():

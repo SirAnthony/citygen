@@ -1,5 +1,6 @@
 
 from . import settings
+import math
 
 
 class Point(object):
@@ -7,6 +8,10 @@ class Point(object):
         self.x = x
         self.y = y
         self.z = 0
+
+    def distance(self, pt):
+        return math.sqrt((pt.x - self.x) ** 2 +
+                         (pt.y - self.y) ** 2)
 
     def __str__(self):
         return self.__unicode__()
@@ -40,9 +45,11 @@ class Center(object):
         self.ocean = False       # ocean
         self.coast = False       # land polygon touching an ocean
         self.border = False      # at the edge of the map
+        self.proximity = 0.0     # average proximity to other centers
         self.elevation = 0.0     # 0.0-1.0
         self.moisture = 0.0      # 0.0-1.0
         self.temperature = 26    # Node temperature
+        self.water_weight = 0    # distance to ocean
 
         self.neighbors = set()      # list<Center*>
         self.borders = set()        # list<Edge*>
@@ -122,6 +129,7 @@ class Corner(object):
         self.elevation = 0.0     # 0.0-1.0
         self.moisture = 0.0      # 0.0-1.0
         self.temperature = 26    # Node temperature
+        self.proximity = 0.0     # average proximity to nearest centers
 
         self.touches = set()        # list<Center*>
         self.protrudes = set()      # list<Edge*>

@@ -1,9 +1,6 @@
 
 from .module import Module
-from ..geom import (Point, LineSegment, Center, Edge, Corner,
-                            interpolate)
 from .. import settings
-from scipy.spatial import Voronoi, Delaunay
 from random import randrange
 
 
@@ -116,8 +113,6 @@ class ModShape(Module):
 
     def __init__(self):
         self.map = None
-        self.heights = None
-
 
     def process(self, map_obj):
         self.map = map_obj
@@ -125,7 +120,7 @@ class ModShape(Module):
         # Function to make water
         self.shape = lambda x: True
 
-        print "Building height map."
+        print "Building height map..."
         # Generate heightmap for new location
         self.generateHeightMap()
         self.assignElevation( )
@@ -154,6 +149,10 @@ class ModShape(Module):
 
         # Determine downslope paths.
         self.calculateDownslopes()
+
+        print "Weighting water..."
+        self.weightWater()
+
 
 
     def generateHeightMap(self):
@@ -251,6 +250,21 @@ class ModShape(Module):
                     r = s
             q.downslope = r
 
+    def weightWater(self):
+        water = filter(lambda x: x.water, self.map.centers)
+        #import pudb; pudb.set_trace()
+        def add_weight(node, weight, processed=[]):
+            if weight < 0:
+                return
+            new_processed = processed + list(node.neighbors)
+            new_processed.append(node)
+            for c in node.neighbors:
+                if c in processed or c.water or c.border:
+                    continue
+                c.water_weight += weight
+                add_weight(c, weight - 1, new_processed)
+        for o in water:
+            add_weight(o, 6)
 
 def get_module():
     return ModShape()
