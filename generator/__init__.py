@@ -1,14 +1,13 @@
 
 from .modules import MODULES_AVAILABLE
 from .map import Map
+from . import settings
 
 def import_module(name):
     return getattr(__import__('generator.modules', fromlist=[name],
                                                         level=-1), name)
 
 class Generator:
-
-
 
     def __init__(self, modules=MODULES_AVAILABLE):
         self.modules = [m.get_module() for m in [
@@ -24,7 +23,7 @@ class Generator:
             module.process(self.map)
 
     def generate(self):
-        self.newMap()
+        self.newMap(settings.SEED_STRING)
         self.runStages()
         print "Output..."
         with open('out.pts', 'w') as pts:

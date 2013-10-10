@@ -15,7 +15,7 @@ class Map(object):
 
         if seed_string:
             for char in seed_string:
-                self.seed = ( seed << 4 ) | ord(char)
+                self.seed = ( self.seed << 4 ) | ord(char)
             self.seed %= 100000
 
         self.seed_name = seed_string
@@ -25,10 +25,10 @@ class Map(object):
     def out(self):
         o = []
         for center in self.centers:
-            if center.border:
-                continue
+            #if center.border:
+            #    continue
             o.append(unicode(center))
-            o.append(u"text {0.point.x}:{0.point.y} {0.water_weight}".format(center))
+            o.append(u"text {0.point.x}:{0.point.y} {0.proximity:.0f}".format(center))
         for edge in list(self.edges):
             o.append(unicode(edge))
         return u'\n'.join(o)
@@ -42,9 +42,10 @@ class Map(object):
         min_pr = min(self.centers, key=lambda x: x.proximity).proximity
 
         def get_color_intens(target):
-            nprox = float(target.proximity - min_pr)
-            pr = ( nprox / float(max_pr - min_pr) ) if nprox else 0.0
-            return pr
+            #~ nprox = float(target.proximity - min_pr)
+            #~ pr = ( nprox / float(max_pr - min_pr) ) if nprox else 0.0
+            #~ return pr
+            return float(target.region_type)
 
         def get_color(center, intens):
             if center.ocean:
@@ -54,6 +55,8 @@ class Map(object):
             return [0.0, intens, 0.0, 1.0]
 
         for p in self.centers:
+            if p.border:
+                continue
             for edge in p.borders:
                 if not edge.v0 or not edge.v1:
                     continue
@@ -68,7 +71,8 @@ class Map(object):
         out = {
             "width": self.width,
             "height": self.height,
-            "depth": 30,
+            "depth_min": self.height_min,
+            "depth": self.height_max + 5.0,
             "verticles": verticles,
             "conn": conn,
             "colors": colors

@@ -111,6 +111,11 @@ class ShapeGenerator(object):
 
 class ModShape(Module):
 
+    REQUIRE_WEIGHT = (
+        ('water', lambda c: c.water, lambda c: not c.water),
+        ('ocean', lambda c: c.ocean, lambda c: not c.ocean),
+    )
+
     def __init__(self):
         self.map = None
 
@@ -150,10 +155,9 @@ class ModShape(Module):
         # Determine downslope paths.
         self.calculateDownslopes()
 
-        print "Weighting water..."
-        self.weightWater()
-
-
+        print "Weighting parameters..."
+        for item in self.REQUIRE_WEIGHT:
+            self.weightParam(*item)
 
     def generateHeightMap(self):
         gen = ShapeGenerator()
@@ -178,8 +182,8 @@ class ModShape(Module):
             for q in p.corners:
                 if q.elevation < settings.GENERATOR_WATER:
                     q.water = True
+                # FIXME: floods everything
                 if q.border and settings.GENERATOR_ISLAND:
-                    p.border = True
                     p.ocean = True
                     q.water = True
                     queue.append(p)
@@ -250,21 +254,21 @@ class ModShape(Module):
                     r = s
             q.downslope = r
 
-    def weightWater(self):
-        water = filter(lambda x: x.water, self.map.centers)
-        #import pudb; pudb.set_trace()
+    def weightParam(self, name, sort_func, check_func):
+        centers = filter(sort_func, self.map.centers)
         def add_weight(node, weight, processed=[]):
             if weight < 0:
                 return
             new_processed = processed + list(node.neighbors)
             new_processed.append(node)
             for c in node.neighbors:
-                if c in processed or c.water or c.border:
+                if c in processed or c.border:
                     continue
-                c.water_weight += weight
-                add_weight(c, weight - 1, new_processed)
-        for o in water:
-            add_weight(o, 6)
+                if check_func(c):
+                    c.weight[name] += weight
+                    add_weight(c, weight - 1, new_processed)
+        for o in centers:
+            add_weight(o, settings.WEIGHT_WIDTH)
 
 def get_module():
     return ModShape()

@@ -1,5 +1,6 @@
 
 from . import settings
+from collections import defaultdict
 import math
 
 
@@ -49,7 +50,7 @@ class Center(object):
         self.elevation = 0.0     # 0.0-1.0
         self.moisture = 0.0      # 0.0-1.0
         self.temperature = 26    # Node temperature
-        self.water_weight = 0    # distance to ocean
+        self.weight = defaultdict(int)   # weights of centers
 
         self.neighbors = set()      # list<Center*>
         self.borders = set()        # list<Edge*>

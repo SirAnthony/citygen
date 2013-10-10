@@ -191,6 +191,8 @@ class ModGraph(Module):
             stack = [edge.v0, edge.v1]
 
             def next_point(p0, e1):
+                if not p0 or not e1.v0 or not e1.v1:
+                    return None
                 if p0 == e1.v0:
                     return e1.v1
                 if p0 == e1.v1:
@@ -245,8 +247,6 @@ class ModGraph(Module):
 
     def prepareGraph(self):
         for c in self.map.centers:
-            if not c.neighbors: # Center - hikka, lol
-                continue
             centers = float(len(c.neighbors))
             proximity = 0.0
             for n in c.neighbors:
@@ -264,13 +264,21 @@ class ModGraph(Module):
     def sweepGraph(self):
         targets = []
         proto = self.map
+
+        for e in list(proto.edges):
+            if not e.v0 or not e.v1:
+                proto.edges.remove(e)
+
         for c in list(proto.centers):
+            c.borders &= proto.edges
             if c.neighbors and c.borders and c.corners:
                 targets.extend([c.neighbors, c.borders, c.corners])
             else:
                 proto.centers.remove(c)
 
         for q in proto.corners:
+            q.protrudes &= proto.edges
+            q.touches &= proto.centers
             targets.extend([q.touches, q.protrudes, q.adjacent])
 
         for tgt in targets:
@@ -278,6 +286,11 @@ class ModGraph(Module):
                 tgt.remove(None)
             except:
                 pass
+
+        for c in list(proto.centers):
+            c.neighbors &= proto.centers
+            c.borders &= proto.edges
+            c.corners &= proto.corners
 
 
 
