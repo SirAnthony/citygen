@@ -2,6 +2,7 @@
 from . import settings
 from collections import defaultdict
 import math
+import hashlib
 
 
 class Point(object):
@@ -37,6 +38,20 @@ class LineSegment(object):
         return u"line {0.p0} {0.p1}".format(self)
 
 
+class LightCenter(object):
+
+    def __init__(self, src):
+        self.index = src.index
+        self.point = src.point     # location
+        self.water = src.water     # lake or ocean
+        self.ocean = src.ocean     # ocean
+        self.coast = src.coast     # land polygon touching an ocean
+        self.border = src.border   # at the edge of the map
+        self.proximity = src.proximity  # average proximity to other centers
+        self.elevation = src.elevation  # 0.0-1.0
+        self.moisture = src.moisture    # 0.0-1.0
+        self.temperature = src.temperature # Node temperature
+
 class Center(object):
 
     def __init__(self, index):
@@ -62,6 +77,12 @@ class Center(object):
 
     def __unicode__(self):
         return u"center {0.index}\n\tpoint {0.point}".format(self)
+
+    def hash(self):
+        m = hashlib.md5()
+        for v in ('index', 'point', 'water', 'proximity', 'weight'):
+            m.update(str(getattr(self, v)))
+        return m.hexdigest()
 
 
 class Edge(object):

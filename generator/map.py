@@ -3,6 +3,7 @@ from . import settings
 import simplejson
 import random
 
+
 class Map(object):
 
     def __init__(self, seed_string="new map"):
@@ -78,3 +79,4 @@ class Map(object):
             "colors": colors
         }
         return simplejson.dumps(out)
+

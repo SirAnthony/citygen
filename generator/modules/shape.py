@@ -2,6 +2,9 @@
 from .module import Module
 from .. import settings
 from random import randrange
+import hashlib
+import numpy as np
+from PIL import Image
 
 
 def next_p2(n):
@@ -68,7 +71,7 @@ class ShapeGenerator(object):
         self.width = next_p2(proto.width)
         self.height = next_p2(proto.height)
         d = self.width if self.width < self.height else self.height
-        self.data = dict(enumerate([dict() for i in range(0, d)]))
+        self.data = [[0] * d for i in range(d)]
 
         self.data[0][0] = self.func(0, 0, d, 0)
         self.data[0][d-1] = self.func(0, d, d, 0)
@@ -119,15 +122,25 @@ class ModShape(Module):
     def __init__(self):
         self.map = None
 
+    def get_hash(self):
+        proto = self.map
+        m = hashlib.md5()
+        for c in sorted(map(lambda x: x.hash(), proto.centers)):
+            m.update(c)
+        for item in (proto.seed, settings.GENERATOR_SIZE_W,
+                     settings.GENERATOR_SIZE_H):
+            m.update(str(item))
+        return m.hexdigest()
+
     def process(self, map_obj):
         self.map = map_obj
 
         # Function to make water
         self.shape = lambda x: True
 
-        print "Building height map..."
         # Generate heightmap for new location
         self.generateHeightMap()
+        print "Applying height map..."
         self.assignElevation( )
 
         # Determine polygon and corner type: ocean, coast, land.
@@ -160,8 +173,28 @@ class ModShape(Module):
             self.weightParam(*item)
 
     def generateHeightMap(self):
-        gen = ShapeGenerator()
-        gen.diamondSquare(self.map)
+        proto = self.map
+
+        print "Loading height map cache."
+        filehash = self.get_hash()
+        try:
+            arr = np.load("cache/heights_{0}.npy".format(filehash))
+            proto.heights = arr[0]
+            proto.height_max = arr[1]
+            proto.height_min = arr[2]
+        except IOError:
+            print "Loading was unsuccessful. Generating new."
+            gen = ShapeGenerator()
+            gen.diamondSquare(proto)
+            data = np.asarray(proto.heights)
+            pmin = proto.height_min
+            pmax = proto.height_max
+            arr = np.asarray([data, pmax, pmin])
+            np.save("cache/heights_" + filehash, arr)
+            # Draw image
+            prepared_data = ((data - pmin) * 255.0/(pmax - pmin)).astype('uint8')
+            img = Image.fromarray(prepared_data)
+            img.save("heights_{0}.png".format(filehash))
 
     def assignElevation(self):
         # TODO: for more realistic landscape with smooth valleys and rough peaks

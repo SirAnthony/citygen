@@ -4,3 +4,5 @@ syntax: glob
 out.poly
 out.pts
 *.pyc
+*.png
+cache/

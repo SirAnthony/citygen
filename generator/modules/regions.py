@@ -64,8 +64,11 @@ class ModRegions(Module):
 
 
     def expandRegions(self, weight_param="water"):
+        proto = self.map
         sort_func = lambda x: (x.weight[weight_param], 1/x.proximity)
         processed = set()
+        proto.main_cbd = set(proto.business_centers)
+
 
         def choose_regions(rlist, func, treshhold, srt=sort_func):
             rlist.sort(key=srt, reverse=True)
@@ -83,11 +86,12 @@ class ModRegions(Module):
             center.region_type = REGION_TYPES["Business"]
             n = list(center.neighbors)
             regions = choose_regions(n, func, treshhold)
+            proto.business_centers.extend(regions)
             for r in regions:
                 watch_neighbors(r, func, treshhold)
 
         # Expand regions
-        for r in self.map.business_centers:
+        for r in proto.main_cbd:
             max_weight = max(r.neighbors, key=lambda x: \
                             x.weight[weight_param]).weight[weight_param]
             min_weight = min(r.neighbors, key=lambda x: \
@@ -101,6 +105,8 @@ class ModRegions(Module):
                 l = lambda x: 1/x.proximity
                 tr = 1 / ( max_pr * settings.REGIONS_BUSINESS_TRESHHOLD )
             watch_neighbors(r, l, tr)
+
+        proto.business_centers = set(proto.business_centers)
 
 
     def fillUnassigned(self):
