@@ -69,6 +69,15 @@ class Map(object):
                 colors.append([get_color(p, get_color_intens(tgt)) \
                         for tgt in (p, edge.v0, edge.v1)])
                 vcindex += 3
+
+        roads = []
+        for s in self.roads:
+            roads.append([
+                [s.p1.x, s.p1.y, s.p1.z+1.0],
+                [s.p2.x, s.p2.y, s.p2.z+1.0],
+                3
+            ])
+
         out = {
             "width": self.width,
             "height": self.height,
@@ -76,7 +85,8 @@ class Map(object):
             "depth": self.height_max + 5.0,
             "verticles": verticles,
             "conn": conn,
-            "colors": colors
+            "colors": colors,
+            "roads": roads
         }
         return simplejson.dumps(out)
 

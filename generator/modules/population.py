@@ -72,8 +72,8 @@ class ModPopulation(Module):
     def get_hash(self):
         proto = self.map
         m = hashlib.md5()
-        for c in sorted(map(lambda x: x.hash(), proto.centers)):
-            m.update(c)
+        #for c in sorted(map(lambda x: x.hash(), proto.centers)):
+        #    m.update(c)
         for item in (proto.seed, settings.GENERATOR_SIZE_W,
                      settings.GENERATOR_SIZE_H,
                      settings.POPULATION_CENTER_SIZE,

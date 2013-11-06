@@ -6,14 +6,19 @@ import hashlib
 
 
 class Point(object):
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0, y=0, z=0):
         self.x = x
         self.y = y
-        self.z = 0
+        self.z = z
 
     def distance(self, pt):
         return math.sqrt((pt.x - self.x) ** 2 +
                          (pt.y - self.y) ** 2)
+
+    def angle(self, pt):
+        dx = pt.x - self.x
+        dy = pt.y - self.y
+        return math.atan2(dy,dx) * 180.0 / math.pi
 
     def __str__(self):
         return self.__unicode__()
